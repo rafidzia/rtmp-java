@@ -1,0 +1,1 @@
+g++ -shared -fPIC -I. -I/usr/lib/jvm/jdk-22-oracle-x64/include -I/usr/lib/jvm/jdk-22-oracle-x64/include/linux -Wl,--no-as-needed -Wl,-rpath,/usr/lib -lrtmp -o librtmpwrapper.so rtmpwrapper.cpp
