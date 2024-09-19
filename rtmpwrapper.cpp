@@ -115,7 +115,7 @@ extern "C"
     JNIEXPORT jboolean JNICALL Java_com_mceasy_jt1078_util_RTMPWrapper_isConnected(JNIEnv *env, jobject obj, jint connection)
     {
         RTMP *rtmp = collection.getRTMPConnection(connection);
-        if (rtmp == NULL || !RTMP_IsConnected(rtmp))
+        if (rtmp == NULL)
         {
             return false;
         }

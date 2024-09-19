@@ -97,6 +97,15 @@ public:
             collection.erase(it);
             result = 0;
         }
+        auto it2 = bufferQueue.find(id);
+        if (it2 != bufferQueue.end())
+        {
+            while (!it2->second.empty())
+            {
+                free(it2->second.front());
+                it2->second.pop();
+            }
+        }
 
         return result;
     }
