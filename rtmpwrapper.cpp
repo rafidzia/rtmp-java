@@ -10,22 +10,8 @@ extern "C"
 {
     RTMPCollection collection;
 
-    int sending(int connection, char *buffer)
+    int sending(RTMP *rtmp, RTMPPacket *packet, char *buffer)
     {
-        RTMP *rtmp = collection.getRTMPConnection(connection);
-        if (rtmp == NULL || !RTMP_IsConnected(rtmp))
-        {
-            RTMP_Log(RTMP_LOGERROR, "Disconnected.\n");
-            return -1;
-        }
-
-        RTMPPacket *packet = collection.getRTMPPacket(connection);
-        if (packet == NULL)
-        {
-            RTMP_Log(RTMP_LOGERROR, "Packet is null.\n");
-            return -1;
-        }
-
         RTMPPacket_Reset(packet);
 
         packet->m_hasAbsTimestamp = 0;
@@ -43,7 +29,6 @@ extern "C"
         uint32_t timestamp;
         memcpy(&timestamp, buffer + 4, 4);
         timestamp = HTONTIME(timestamp);
-
 
         packet->m_packetType = type;
         packet->m_nBodySize = datalength;
@@ -70,29 +55,41 @@ extern "C"
             return;
         }
 
+        RTMPPacket *packet = collection.getRTMPPacket(connection);
+        if (packet == NULL)
+        {
+            RTMP_Log(RTMP_LOGERROR, "Packet is null.\n");
+            return;
+        }
+
         int timeoutStep = 0;
 
         while (1)
         {
+            if (!RTMP_IsConnected(rtmp))
+            {
+                RTMP_Log(RTMP_LOGERROR, "Exit Loop.\n");
+                break;
+            }
             if (collection.isQueueEmpty(connection))
             {
-                std::this_thread::sleep_for(std::chrono::milliseconds(10));
                 timeoutStep++;
                 if (timeoutStep > 500)
                 {
-                    RTMP_Log(RTMP_LOGERROR, "Timeouted.\n");
+                    RTMP_Log(RTMP_LOGERROR, "Timeouted. Exit Loop.\n");
                     collection.closeRTMPConnection(connection);
                     break;
                 }
-                continue;
+                std::this_thread::sleep_for(std::chrono::milliseconds(10));
             }
-            timeoutStep = 0;
-            char *buffer = collection.dequeBuffer(connection);
-            if (buffer == NULL) continue;
-            if (sending(connection, buffer) < 0)
+            else
             {
-                collection.closeRTMPConnection(connection);
-                break;
+                timeoutStep = 0;
+                char *buffer = collection.dequeBuffer(connection);
+                if (buffer != NULL)
+                {
+                    sending(rtmp, packet, buffer);
+                }
             }
         }
     }
