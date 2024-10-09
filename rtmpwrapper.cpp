@@ -69,6 +69,7 @@ extern "C"
             if (!RTMP_IsConnected(rtmp))
             {
                 RTMP_Log(RTMP_LOGERROR, "Exit Loop.\n");
+                collection.closeRTMPConnection(connection);
                 break;
             }
             if (collection.isQueueEmpty(connection))

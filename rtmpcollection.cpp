@@ -87,7 +87,7 @@ public:
 
     int closeRTMPConnection(int id)
     {
-        std::lock_guard<std::mutex> lock(collectionMutex);
+        std::lock_guard<std::mutex> lock1(collectionMutex);
         auto it = collection.find(id);
         int result = -1;
         if (it != collection.end())
@@ -97,6 +97,7 @@ public:
             collection.erase(it);
             result = 0;
         }
+        std::lock_guard<std::mutex> lock2(bufferQueueMutex);
         auto it2 = bufferQueue.find(id);
         if (it2 != bufferQueue.end())
         {
@@ -105,6 +106,14 @@ public:
                 free(it2->second.front());
                 it2->second.pop();
             }
+            bufferQueue.erase(it2);
+        }
+        std::lock_guard<std::mutex> lock3(packetBufferMutex);
+        auto it3 = packetBuffer.find(id);
+        if (it3 != packetBuffer.end())
+        {
+            RTMPPacket_Free(it3->second);
+            packetBuffer.erase(it3);
         }
 
         return result;
