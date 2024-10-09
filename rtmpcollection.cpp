@@ -54,13 +54,8 @@ public:
         int32_t id = ++counter;
         collection.insert(std::make_pair(id, rtmp));
 
-        std::queue<char*> q;
+        std::queue<char *> q;
         bufferQueue.insert(std::make_pair(id, q));
-
-        RTMPPacket *packet = (RTMPPacket *)malloc(sizeof(RTMPPacket));
-        RTMPPacket_Alloc(packet, 1024 * 512);
-        RTMPPacket_Reset(packet);
-        packetBuffer.insert(std::make_pair(id, packet));
 
         return id;
     }
@@ -71,16 +66,6 @@ public:
         if (collection.find(id) != collection.end())
         {
             return collection[id];
-        }
-        return NULL;
-    }
-
-    RTMPPacket *getRTMPPacket(int id)
-    {
-        std::lock_guard<std::mutex> lock(packetBufferMutex);
-        if (packetBuffer.find(id) != packetBuffer.end())
-        {
-            return packetBuffer[id];
         }
         return NULL;
     }
@@ -107,13 +92,6 @@ public:
                 it2->second.pop();
             }
             bufferQueue.erase(it2);
-        }
-        std::lock_guard<std::mutex> lock3(packetBufferMutex);
-        auto it3 = packetBuffer.find(id);
-        if (it3 != packetBuffer.end())
-        {
-            RTMPPacket_Free(it3->second);
-            packetBuffer.erase(it3);
         }
 
         return result;
@@ -154,9 +132,7 @@ private:
     const char *url;
     std::map<int, RTMP *> collection;
     std::mutex collectionMutex;
-    std::map<int, std::queue<char*>> bufferQueue;
+    std::map<int, std::queue<char *>> bufferQueue;
     std::mutex bufferQueueMutex;
-    std::map<int, RTMPPacket *> packetBuffer;
-    std::mutex packetBufferMutex;
     int32_t counter;
 };

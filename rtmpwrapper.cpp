@@ -21,6 +21,8 @@ extern "C"
 
         uint8_t type;
         memcpy(&type, buffer, 1);
+        if (type == 0x08)
+            packet->m_nChannel = 0x03;
 
         uint32_t datalength;
         memcpy(&datalength, buffer + 1, 3);
@@ -38,11 +40,6 @@ extern "C"
         free(buffer);
 
         int result = RTMP_SendPacket(rtmp, packet, 0);
-        if (result < 0)
-        {
-            RTMP_Log(RTMP_LOGERROR, "Failed to send packet.\n");
-            return -1;
-        }
         return result;
     }
 
@@ -55,23 +52,13 @@ extern "C"
             return;
         }
 
-        RTMPPacket *packet = collection.getRTMPPacket(connection);
-        if (packet == NULL)
-        {
-            RTMP_Log(RTMP_LOGERROR, "Packet is null.\n");
-            return;
-        }
+        RTMPPacket *packet = (RTMPPacket *)malloc(sizeof(RTMPPacket));
+        RTMPPacket_Alloc(packet, 1024 * 512);
 
         int timeoutStep = 0;
 
         while (1)
         {
-            if (!RTMP_IsConnected(rtmp))
-            {
-                RTMP_Log(RTMP_LOGERROR, "Exit Loop.\n");
-                collection.closeRTMPConnection(connection);
-                break;
-            }
             if (collection.isQueueEmpty(connection))
             {
                 timeoutStep++;
@@ -82,17 +69,21 @@ extern "C"
                     break;
                 }
                 std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                continue;
             }
-            else
+            timeoutStep = 0;
+            char *buffer = collection.dequeBuffer(connection);
+            if (buffer == NULL)
+                continue;
+            if (sending(rtmp, packet, buffer) <= 0)
             {
-                timeoutStep = 0;
-                char *buffer = collection.dequeBuffer(connection);
-                if (buffer != NULL)
-                {
-                    sending(rtmp, packet, buffer);
-                }
+                RTMP_Log(RTMP_LOGERROR, "Packet Unsent. Exit Loop.\n");
+                collection.closeRTMPConnection(connection);
+                break;
             }
         }
+
+        RTMPPacket_Free(packet);
     }
 
     JNIEXPORT jint JNICALL Java_com_mceasy_jt1078_util_RTMPWrapper_connect(JNIEnv *env, jobject obj, jstring url)
@@ -114,20 +105,15 @@ extern "C"
     {
         RTMP *rtmp = collection.getRTMPConnection(connection);
         if (rtmp == NULL)
-        {
             return false;
-        }
         return true;
     }
 
     JNIEXPORT jint JNICALL Java_com_mceasy_jt1078_util_RTMPWrapper_send(JNIEnv *env, jobject obj, jint connection, jbyteArray byteArray)
     {
         RTMP *rtmp = collection.getRTMPConnection(connection);
-        if (rtmp == NULL || !RTMP_IsConnected(rtmp))
-        {
-            RTMP_Log(RTMP_LOGERROR, "Disconnected.\n");
+        if (rtmp == NULL)
             return -1;
-        }
 
         jbyte *byteData = env->GetByteArrayElements(byteArray, NULL);
 
