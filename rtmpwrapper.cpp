@@ -2,9 +2,9 @@
 #include <librtmp/rtmp.h>
 #include <unistd.h>
 #include <string.h>
-#include <rtmpcollection.cpp>
 #include <thread>
 #include <iostream>
+#include <rtmpcollection.cpp>
 
 extern "C"
 {
@@ -64,7 +64,7 @@ extern "C"
                 timeoutStep++;
                 if (timeoutStep > 500)
                 {
-                    RTMP_Log(RTMP_LOGERROR, "Timeouted. Exit Loop.\n");
+                    RTMP_Log(RTMP_LOGERROR, "Timeouted. Exit Loop.");
                     collection.closeRTMPConnection(connection);
                     break;
                 }
@@ -77,7 +77,7 @@ extern "C"
                 continue;
             if (sending(rtmp, packet, buffer) <= 0)
             {
-                RTMP_Log(RTMP_LOGERROR, "Packet Unsent. Exit Loop.\n");
+                RTMP_Log(RTMP_LOGERROR, "Packet Unsent. Exit Loop.");
                 collection.closeRTMPConnection(connection);
                 break;
             }

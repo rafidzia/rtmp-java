@@ -50,7 +50,12 @@ public:
         }
         int fd = RTMP_Socket(rtmp);
         int flags = fcntl(fd, F_GETFL, 0);
-        fcntl(fd, F_SETFL, flags | O_NONBLOCK);
+        // fcntl(fd, F_SETFL, flags | O_NONBLOCK);
+        fcntl(fd, F_SETFL, flags & ~O_NONBLOCK);
+        if (counter == 2147483647)
+        {
+            counter = 0;
+        }
         int32_t id = ++counter;
         collection.insert(std::make_pair(id, rtmp));
 
