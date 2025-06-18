@@ -4,8 +4,10 @@
             "name": "Linux",
             "includePath": [
                 "${workspaceFolder}/**",
-                "/usr/lib/jvm/jdk-22-oracle-x64/include",
-                "/usr/lib/jvm/jdk-22-oracle-x64/include/linux"
+                "/usr/lib/jvm/jdk-24-oracle-x64/include",
+                "/usr/lib/jvm/jdk-24-oracle-x64/include/linux",
+                "/home/farid-aa/.sdkman/candidates/java/24-oracle/include",
+                "/home/farid-aa/.sdkman/candidates/java/24-oracle/include/linux"
             ],
             "defines": [],
             "cStandard": "c17",
